@@ -1,0 +1,283 @@
+---
+title: "Clase 4, Visualización de Datos en R"
+author: "Barbara Peña"
+date: "12-09-2020"
+output: 
+  bookdown::html_document2:
+    fig_caption: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(hexbin)
+library(bookdown)
+library(tidyverse)
+```
+
+install.packages("bookdown")
+install.packages("hexbin")
+# ggplot2
+ggplot(data.frame, aes(nombres_de_columnas_con_la_que_quiero_trabajar)) 
+- geom_algo(argumentos, aes(columnas))
+- theme_algo()estilo <- cambio estetico.
+- Personalizacion_de_ejes_y_leyendas
+
+##Scatter plots comparando dos variables
+```{r}
+data("diamonds")
+ggplot(diamonds, aes(x=carat, y=price)) + geom_point(aes(color=cut))+ theme_dark()
+```
+
+Debo poner dentro del aes la column a usar, y argumentos como color
+```{r}
+ggplot(diamonds, aes(x=carat, y=price)) + 
+  geom_point(aes(color=cut), alpha=0.2)+ 
+  theme_dark()
+```
+
+Otro tema
+```{r}
+ggplot(diamonds, aes(x=carat, y=price)) + 
+  geom_point(aes(shape=cut, color=color), alpha=0.2)+ 
+  theme_classic()
+```
+
+## Para mtcars
+Vamos a cambiar el tamaño agregue una tercera dimensión con size=hp
+```{r}
+data("mtcars") 
+ggplot(mtcars, aes(x=wt, y=mpg)) +
+  geom_point(aes(size=hp)) + 
+  theme_classic()
+```
+
+Para transformar una variable continua en una discreta, como hp:
+```{r}
+
+ggplot(mtcars, aes(x=wt, y=mpg)) +
+  geom_point(aes(size=hp, shape=hp)) + 
+  theme_classic() + scale_shape_binned()
+```
+
+- Fill, solo para áreas, no para punto
+- Notch= Intervalo confianza de la mediana
+```{r}
+data("iris")
+ggplot(iris, aes(x= Species, y=Sepal.Width)) +
+  geom_boxplot(notch = T, aes(fill=Species))
+```
+## Color
+Poner los colores manualmente, mirar color ColorBrewer2
+
+```{r}
+ggplot(iris, aes(x= Species, y=Sepal.Width)) +
+  geom_boxplot(notch = T, aes(fill=Species)) +
+  scale_fill_manual(values=c("red", "blue", "yellow"))
+```
+
+```{r}
+ggplot(iris, aes(x= Species, y=Sepal.Width)) +
+  geom_boxplot(notch = T, aes(fill=Species)) +
+  scale_fill_viridis_b(name= "Especie")
+```
+
+# Una variable categorica a una continua
+## * geom_jitter*
+Variabilidad de los puntos en el eje y
+```{r}
+
+ggplot(iris,aes(x=Species, y=Sepal.Width))+
+  geom_jitter(aes(color=Species))
+```
+
+## *geom_violin*
+```{r}
+ggplot(iris,aes(x=Species, y=Sepal.Width))+
+  geom_violin(fill="red") + coord_flip()
+```
+
+Se pueden combinar, pero el orden es importante, porque va por capas, siendo lo ultimo que se agrega en la linea lo que queda encima
+```{r}
+ggplot(iris,aes(x=Species, y=Sepal.Width))+
+  geom_violin() +geom_jitter(aes(color=Species))+ coord_flip()
+```
+```{r}
+ggplot(iris,aes(x=Species, y=Sepal.Width))+
+  geom_violin() + geom_boxplot()+ 
+  geom_jitter(aes(color=Species))+coord_flip()
+```
+Alpha=0, violines y boxplot vacios
+```{r}
+ggplot(iris,aes(x=Species, y=Sepal.Width))+
+  geom_violin(alpha=0) + geom_boxplot(alpha=0)+ 
+  geom_jitter(aes(color=Species))+coord_flip()
+```
+
+## Como reordenar variables?
+```{r}
+ggplot(iris,aes(x=Species, y=Sepal.Width))+
+  geom_boxplot(notch = T)
+```
+
+```{r}
+ggplot(iris,aes(x=fct_reorder(Species, Sepal.Width), y=Sepal.Width))+
+  geom_boxplot(notch = T)
+```
+
+```{r}
+ggplot(iris,aes(x=fct_reorder(Species, Sepal.Width, .desc=T), y=Sepal.Width))+
+  geom_boxplot(notch = T) + xlab ("Especie") + ylab("Ancho Sepalo")
+```
+
+```{r}
+ggplot(iris,aes(x=fct_relevel(Species, "setosa", "virginica"), y=Sepal.Width))+
+  geom_boxplot(notch = T, aes(fill=Species)) +
+  xlab ("Especie") + ylab("Ancho Sepalo")
+```
+
+
+## Para vairables continuas
+
+*geom_point()*
+*geom_smooth()*
+*geom_line()*
+*geom_hex()*
+*geom_rux*
+
+
+```{r}
+ggplot(diamonds, aes(x=carat, y=price)) + 
+  geom_hex()+ scale_fill_viridis_c()
+```
+
+```{r}
+ggplot(mtcars, aes(x=wt, y=mpg)) +
+  geom_smooth() + geom_point()
+```
+
+```{r}
+ggplot(mtcars, aes(x=wt, y=mpg)) +
+   geom_point()
+```
+
+La linea que agrega smotth, es una linea de detendecia
+
+```{r}
+ggplot(mtcars, aes(x=wt, y=mpg)) +
+  geom_smooth()
+```
+
+Pero puedo cambiarla por una liena de regresion lineal
+```{r}
+ggplot(mtcars, aes(x=wt, y=mpg)) +
+  geom_smooth(method=lm, fill="yellow", alpha=0.5) + geom_point()
+```
+
+
+
+# Con esto, descargamos una base de datos. 
+
+```{r}
+githubURL <- ("https://raw.githubusercontent.com/derek-corcoran-barrios/derek-corcoran-barrios.github.io/master/Clase4/TempHum.rds")
+download.file(githubURL, "TempHum.rds", method = "curl")
+
+TempHum <- read_rds("TempHum.rds") %>% mutate(Mes = as.numeric(Mes))
+CU <- TempHum %>% filter(Ciudad_localidad == "Curic?")
+```
+
+```{r}
+ggplot(CU, aes(x=Mes, y=Temperatura)) + geom_point() +geom_smooth(method=lm)
+```
+
+```{r}
+ggplot(CU, aes(x=Mes, y=Temperatura)) + geom_point() +
+  stat_smooth(method=lm, formula= y~ x+ I(x^2) + I(x^4))
+```
+
+```{r}
+CU2<- CU %>%  
+  pivot_longer(cols=c("Temperatura", "Humedad"), names_to="Unidad", values_to="Medida")
+
+ggplot(CU2, aes(x=Mes, y=Medida)) + geom_point(aes(color=Unidad)) +
+  stat_smooth(method=lm, formula= y~ x+ I(x^2) + I(x^4), aes(fill=Unidad))
+```
+
+
+# Varios gráficos juntos
+## si quiero poner varias ciudades? 
+```{r}
+Algunos <- TempHum %>% filter(Ciudad_localidad %in% 
+                                c("Arica", "Rapa Nui", "La Serena", "Valpara?so", 
+                                  "Quinta Normal", "Concepci?n", "Valdivia", 
+                                  "Punta Arenas")) %>% 
+  pivot_longer(cols = c(Temperatura, Humedad),names_to = "Unidad", values_to = "medida")
+```
+```{r}
+ggplot(Algunos, aes(x= Mes, y= medida)) + 
+  geom_point(aes(color=Ciudad_localidad)) +
+  stat_smooth(method=lm, formula= y~ x+ I(x^2), 
+              aes(fill=Ciudad_localidad, color=Ciudad_localidad))
+
+```
+
+```{r}
+ggplot(Algunos, aes(x= Mes, y= medida)) + 
+  geom_point() +
+  stat_smooth(method=lm, formula= y~ x+ I(x^2))+
+  facet_wrap(~Ciudad_localidad, ncol=2)
+```
+
+```{r}
+ggplot(Algunos, aes(x= Mes, y= medida)) + 
+  geom_point() +
+  stat_smooth(method=lm, formula= y~ x+ I(x^2))+
+  facet_wrap(~fct_reorder(Ciudad_localidad, Unidad), ncol=2)
+```
+
+
+# Mapas en ggplot2
+Ver curso de GMIT
+https://www.youtube.com/watch?v=v71pC7yddo0
+
+
+# Ejemplo
+fijarse en la primera parte del documento!
+
+title: "Ejemplo Clase_4"
+author: "Barbara Peña"
+date: "04-09-2020"
+output: 
+  bookdown::html_document2:
+    fig_caption: yes
+    
+
+# Voy a hacer un grafico
+
+Este texto va antes de la figura \@ref(fig:Distribuciontamano)
+
+```{r Distribuciontamano, fig.cap="Distrubición para el ancho del sepalo para cada especie iris", fig.align="center"}
+ggplot(iris,aes(x=fct_relevel(Species, "setosa", "virginica"), y=Sepal.Width))+ geom_boxplot(notch = T, aes(fill=Species)) + xlab("Especie") + ylab("Ancho Sepalo")
+```
+
+### hacer un chank por cada figura, y hacer un chunk iferente por cada transformacion. 
+
+veamos las medias en una tabla \@ref(tab:tablafloral)
+
+```{r, transformacion}
+iris_2 <- iris %>% group_by(Species) %>% summarise_all(mean)
+```
+
+```{r, tablafloral}
+kable(iris_2, caption="Media de las medias floraes en las especies del genero IRIS") %>% kable_styling(bootstrap_options = c("striped"))
+``` 
+
+Ahora, una imagen de Portugal en la Fig\@ref(fig:Portugal)
+```{r, Portugal, fig.cap="Playa de pais", out.width="1000px"}
+knitr::include_graphics("https://www.hola.com/imagenes/viajes/20190313138883/portugal-pais-mas-eco-europa/0-658-599/maravillas-naturaleza-portugal-2t-t.jpg")
+
+```
+
+
+
+
+
