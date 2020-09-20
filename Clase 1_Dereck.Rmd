@@ -1,0 +1,259 @@
+---
+title: "Clase_1: Tidy Data"
+author: "Barbara Peña"
+date: "19-09-2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = F)
+library(tidyverse)
+library(lubridate)
+```
+
+# Como se organizan los datos en R ?
+
+
+- Vector: Conjunto lineal de datos (secuencia génica, serie de tiempo), de muchos tipos (números, caracteres, lógicos, etc)
+
+```{r}
+
+A<- c(1,2,3,4,5,6,7,8)
+Colors<- c("Azul", "Rojo", "Verde", "Amarillo")
+
+```
+Para subsetear un vector, se pone el índice entre []
+
+```{r}
+A[3:5]
+A[c(1,3)]
+Colors[c(4,1)]
+Colors[c(1:3)]
+```
+
+- Data Frame: Una tabla donde cada columna tiene un tipo de datos (gold standar)
+```{r}
+data(iris)
+head(iris)# comando head muestra solo la primera parte de la tabla
+```
+Para subsetear un data.frame [filas,columnas]
+```{r}
+head(iris["Petal.Length"])
+iris[2:5, c(1:5)]
+iris$Petal.Length
+```
+
+- List: Aqui podemos poner lo que queramos
+```{r}
+lista_1 <- c(iris,A,Colors)
+```
+
+- Matrix: Una tabla con solo número
+
+# Principios de Tidydata
+
+- Cada columna es una variable (*variable*)
+- Cada fila es una observación (*observations*)
+- Cada numero o anotación de cada observación de una variable es un valor (*value*)
+
+
+# Ejemplo Untidy data
+```{r}
+data("HairEyeColor")
+HairEyeColor
+```
+
+
+# dplyr
+- Es un paquete con pocas funciones, pero muy poderosa para ordenar datos
+- Parte del tidyverse
+```{r}
+library(tidyverse)
+library(dplyr)
+```
+
+
+## group_by y summarize
+
+- group_by reune observaciones según una variable
+- summarize resuma una variable
+```{r}
+Summary.Petal<- summarize(iris, Mean.Petal.Length=mean(Petal.Length), SD.Petal.Length =sd(Petal.Length))
+Summary.Petal
+```
+
+```{r}
+summary.Petal <- group_by(iris, Species) #Aqui agrupo por especie, de modo que el resumen quedará por especie
+summary.Petal<- summarize(summary.Petal, 
+                          Mean.Petal.Length = mean(Petal.Length), 
+                          SD.Petal.Length=sd(Petal.Length)) #resumen de promedios y desviación estandar
+summary.Petal
+```
+
+- Se puede agrupar por más de una variable a la vez
+```{r}
+data("mtcars")
+Mtcars2<- group_by(mtcars, am, cyl) #estoy agrupando segun si es manual o automatico (am) y numero de cilindros(cyl)
+Consumo<- summarize(Mtcars2, Consumo_promedio = mean(mpg), desv=sd(mpg)) # El resumen quedará agrupado diferencialmente para autos automaticos/manuales según su número de cilindros. 
+Consumo
+```
+
+## Mutate
+
+Crea variables nuevas a partir de las ya existentes
+```{r}
+DF<- mutate(iris, Petal.Sepal.Ratio=Petal.Length/Sepal.Length)
+head(DF) #mirar ultima columna agregada
+```
+
+
+## Pipeline %>% 
+- Para realizar varias operaciones de forma secuencial 
+- Sin recurrir a parentesis anidados
+- Sobrescribir multiples bases de datos
+```{r}
+x<- c(1,4,6,8)
+y<-round(mean(sqrt(log(x))), 2)
+y
+```
+puedo hacer lo mismo, pero queda visualmente más claro
+```{r}
+z<- x %>% log() %>% sqrt() %>% mean() %>% round(2)
+
+z
+```
+
+En vez de muchos objetos intermedios
+
+```{r}
+DF <- mutate(iris, Petal.Sepal.Ratio = Petal.Length/Sepal.Length)
+BySpecies <- group_by(DF, Species)
+Summary.Byspecies <- summarize(BySpecies, MEAN = mean(Petal.Sepal.Ratio), 
+    SD = sd(Petal.Sepal.Ratio))
+Summary.Byspecies
+```
+
+Con pipe solo hago una línea.
+
+```{r}
+DF6<- iris %>%
+  mutate(Ratio_PEtal_Sepal=Petal.Length/Sepal.Length) %>% 
+  group_by(Species) %>% 
+  summarise(Mean_ratio=mean(Ratio_PEtal_Sepal),SD_ratio=sd(Ratio_PEtal_Sepal))
+DF6
+```
+
+Otro ejemplo. Summarise_all, toma todas las variables, hace el resumen que le pido (en este caso, mean y sd)
+```{r}
+MEAN <- iris %>% group_by(Species) %>% summarize_all(.funs = list(Mean = mean, 
+    SD = sd)) 
+MEAN
+```
+
+
+```{r}
+DF8 <- iris %>% 
+  group_by(Species) %>% 
+  summarise_at(.vars= c("Sepal.Length", "Sepal.Width"), .funs=list(Mean=mean, SD= sd, Median=median)) # .vars, es para pedirle que haga el resumen solo para las variables que le indico
+
+DF8
+
+```
+
+## Filter
+- Selecciona según una o más variables
+
+```{r}
+
+DF9 <- iris %>% filter(Species != "versicolor") %>% 
+  group_by(Species) %>% summarise_all(.funs=list(Mean=mean,SD=sd)) # .funs,es la lista de las funciones, si no le pongo el nombre a las funciones, va a quedar como funs...
+DF9
+```
+
+Filtrando según parametros específicos.
+```{r}
+DF10 <- iris %>% filter(Species != "virginica", Petal.Length>=4, Petal.Width>=1.5) 
+DF10
+
+```
+
+
+Si quiero seleccionar caracteristicas precisas, por ejemplo, autos con 6 y 8 cilidros
+```{r}
+DF11 <- mtcars %>%  filter (cyl %in% c(6,8)) %>% 
+  group_by(am) %>%  summarise(Consumo=mean(mpg))
+```
+si quiero saber cuantas objetos hay con mis parametros
+```{r}
+DF12 <- iris %>% filter(Petal.Length>4.5) %>% 
+  group_by(Species) %>% summarise(Numero=n())
+DF12
+```
+ 
+## Select
+
+Para seleccionar variables
+```{r}
+data(mpg)
+head(mpg)
+```
+
+categorias únicas, una variable
+```{r}
+
+mpg$class %>% unique()
+mpg_chico <- mpg %>%  filter(class=="suv") %>% 
+  select(cty,hwy,cyl)
+mpg_chico
+```
+
+```{r}
+DF13 <- iris %>% select(starts_with("Petal"), Species)
+head(DF13)
+```
+
+
+# Tarea 1
+
+Usando la base de datos del repositorio del ministerio de ciencias, genera un dataframe que responda lo siguiente:
+1.-  ¿Que proporción de las comunas ha tenido en algun momento mas de 50 casos por cada 100.000 habitantes?
+2.- Genera un dataframe, donde aparezca para cada comuna que haya tenido sobre 50 casos por cada 100.000 habitantes, cuantos días ha tenido sobre ese valor.
+3 .- Genera una tabla de cuales comunas han tenido sobre 50 casos por cada 100.000 habitantes y de esas comunas crea una variable que sea la prevalencia m?xima de dicha comuna.
+4.- Ve cuales son las 10 comunas que han tneido la mayor mediana de prevalencia, para cada una de ellas. Genera una tabla con la mediana, prevalencia máxima y fecha que alcanz? la prevalencia m?xima
+```{r}
+Casos_Activos <- read_csv("https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto19/CasosActivosPorComuna_std.csv")
+
+colnames(Casos_Activos)<- make.names(colnames(Casos_Activos))
+```
+
+##  Respuesta 1
+```{r}
+Df1 <- mutate(Casos_Activos, casos.100milhabitantes= (Casos.activos/Poblacion)*100000) %>% filter(casos.100milhabitantes>=50) 
+n_comunas_totales<- unique(Casos_Activos$Comuna) %>% length()
+n_comunas_mayor_50 <- unique(Df1$Comuna) %>% length()
+Proporcion<-n_comunas_mayor_50/n_comunas_totales
+Proporcion
+```
+
+## Respuesta 2
+```{r}
+Df2<-  Df1 %>% group_by(Comuna) %>% summarise(N=n())
+Df2
+```
+
+## Respuesta 3
+```{r}
+
+Df3 <- Df1 %>%group_by(Comuna) %>% filter(casos.100milhabitantes==max(casos.100milhabitantes)) %>%
+  rename(Prevalencia_maxima=casos.100milhabitantes) %>% select(Comuna,Prevalencia_maxima) %>% arrange(desc(Prevalencia_maxima))
+Df3
+```
+## Respuesta 4
+```{r}
+
+Df4<- Df1 %>% arrange(desc(casos.100milhabitantes)) %>% rename(Prevalencia_max=casos.100milhabitantes)%>% slice_max(Prevalencia_max,n=10)
+Prevalencia_max_top_10<- Df4[1:10,]
+Prevalencia_max_top_10
+```
+
+
