@@ -1,0 +1,43 @@
+---
+title: "Ejemplo Clase_4"
+author: "Barbara Peña"
+date: "04-09-2020"
+output: 
+  bookdown::html_document2:
+    fig_caption: yes
+    
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, warning=F, error=F, message=F)
+library(tidyverse)
+library(kableExtra)
+```
+# Voy a hacer un grafico
+
+Este texto va antes de la figura \@ref(fig:Distribuciontamano)
+
+```{r Distribuciontamano, fig.cap="Distrubición para el ancho del sepalo para cada especie iris", fig.align="center"}
+ggplot(iris,aes(x=fct_relevel(Species, "setosa", "virginica"), y=Sepal.Width))+ geom_boxplot(notch = T, aes(fill=Species)) + xlab("Especie") + ylab("Ancho Sepalo")
+```
+
+### hacer un chank por cada figura, y hacer un chunk iferente por cada transformacion. 
+
+veamos las medias en una tabla \@ref(tab:tablafloral)
+
+```{r, transformacion}
+iris_2 <- iris %>% group_by(Species) %>% summarise_all(mean)
+```
+
+```{r, tablafloral}
+kable(iris_2, caption="Media de las medias floraes en las especies del genero IRIS") %>% kable_styling(bootstrap_options = c("striped"))
+``` 
+
+Ahora, una imagen de Portugal en la Fig\@ref(fig:Portugal)
+```{r, Portugal, fig.cap="Playa de pais", out.width="1000px"}
+knitr::include_graphics("https://www.hola.com/imagenes/viajes/20190313138883/portugal-pais-mas-eco-europa/0-658-599/maravillas-naturaleza-portugal-2t-t.jpg")
+
+```
+
+
+
