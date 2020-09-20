@@ -33,3 +33,7 @@ Tabla <- msleep %>%
   summarise_at ("sleep_total", .funs = list(Mean=mean, SD=sd )) %>%  
   filter(!is.na(vore)) %>% 
   arrange(desc(Mean))
+
+
+## Tarea 
+World_20Happiness_20Report <- read_csv("https://raw.githubusercontent.com/PhilippeCodes/World-Happiness-Report-Data-Analysis/master/World%20Happiness%20Report.csv")

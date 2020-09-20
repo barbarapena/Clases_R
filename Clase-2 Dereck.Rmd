@@ -32,7 +32,7 @@ Un github es como un google drive o dropox para codigos. Tiene control de cambio
 git config --global user.email "bpena1@uc.cl"
 git config --global user.name "barbarapena"
 
-# Datos para hoy
+## Datos para hoy
 Estos datos sobre platas extintas son datos de la **IUCN**, y se obtuvieron del siguiente repositorio (https://github.com/rfordatascience/tidytuesday) de github
 ```{r}
 plants <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-08-18/plants.csv')
@@ -118,5 +118,13 @@ kable(msleep_long, digits = 2, caption="La base de datos entera") %>% kable_styl
 ```
 
 
+# Tarea 
+Hagan un Rmd con datos para el reporte de felicidad
+- Traten de aplicar todo lo que aprendimos hoy
+- Crear un github
+- generar un Rmd
+- Usar chunks e inline code
+- Hacer tablas resumen
 
+World_20Happiness_20Report <- read_csv("https://raw.githubusercontent.com/PhilippeCodes/World-Happiness-Report-Data-Analysis/master/World%20Happiness%20Report.csv")
 
