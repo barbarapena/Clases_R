@@ -1,0 +1,183 @@
+---
+title: "Clase 5 Modelos"
+author: "Barbara Peña"
+date: "20-09-2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+library(tidyverse)
+
+```
+
+
+install.packages("rticles")
+tinytex::install_tinytex
+
+# ¿Qué es un modelo?
+- Un modelo es una versión simplificada de la realidad que nos permite hacer inferencias o prediccións sobre una población
+- Un modelo es un resumen adecuado de la realidad
+- Un modelo es una simplificación or aproximación a la realidad y por ende no reflejará toda la realidad (Burnham y Anderson)
+- Todos los modelos estan equivocados, algunos son útiles (George Box)
+
+# Abrir base de datos
+```{r}
+data("CO2")
+View(CO2)
+```
+
+## Exploremos la data 
+
+¿Qué variable explica mejor la variación de uptake en esta base de datos?
+
+### La especie?
+
+Recordar que notch marca el intervalo de confianza del 95% de la mediana. 
+```{r}
+ggplot(CO2, aes(x= Type, y= uptake)) + geom_boxplot(aes(fill=Type), notch = T) + theme_classic()
+```
+
+
+## El tratamiento ?
+Recordar que notch marca el intervalo de confianza del 95% de la mediana. 
+
+```{r}
+ggplot(CO2, aes(x= Treatment, y= uptake)) + geom_boxplot(aes(fill= Treatment), notch = T) + theme_classic()
+```
+
+## La concentración?
+```{r}
+ggplot(CO2, aes(x= conc, y= uptake)) + geom_point() + theme_classic()
+```
+
+
+#¿Como determinamos un buen modelo?. Fórmula de un modelo
+
+Alguna_funcion(Y~ X1 + X2 + ...+  Xn, data= data.frame)
+ 
+- Y= variale repsuesta (Captacion CO2)
+- ~ = Explicado por
+- Xn= Variable explicativa n (Subespeice, tratamiento,etc)
+
+data.frame= Base de datos CO2
+alguna_funcion: El modelo  a testear (muestra una simplificación de la realidad)
+
+## **Algunos modelos**
+- prueba t
+- ANOVA
+- modelo lineal simple
+- modelo lineal generalizado
+- modelo aditivo
+- modelo no lineal
+- modelos lineales mixtos
+- bossted regression trees
+
+## Cual usamos ahora ?
+
+Modelo lineal, capatacion de CO2 explicado por ecotipo (variable categorica)
+
+```{r}
+Fit1 <- lm(formula = uptake ~ Type, data = CO2)
+```
+Esto es equivalente a un ANOVA, si estamos ocupando un modelo lineal simple con una variable categorica
+
+### Usar brrom para sacarle mas a tu modelo (glance)
+para ver los daos generales del modelo
+
+```{r}
+library(broom)
+```
+
+### glance
+Para el modelo general, glance, para ver datos generales del modelo
+```{r}
+Est1<- glance(Fit1)
+Est1
+Est1 %>% select(r.squared:sigma, df:AIC)
+Est1 %>%  select(r.squared, adj.r.squared, p.value, nobs )
+```
+### tidy
+Para ver los parametros de otra manera
+```{r}
+
+Est2 <-tidy(Fit1)
+Est2
+```
+
+### Augment
+Para predicciones y residuales del modelo
+```{r}
+augment(Fit1)
+Est3 <- augment(Fit1)
+hist(Est3$.resid)
+
+```
+
+
+# Seleccion de modelos
+Uno por lo general trabaja con varios modelos
+- En general uno lo hace en base a AIC
+-K= nummero de parametros, en caso de Fit 1, intercepto y ecotipo
+-Ln (L) ajust, mas positivo mejor, mas negatico es malo, loglik
+- AIC=2K-2ln(L)
+
+```{r}
+ggplot(CO2, aes(x=conc, y=uptake, color=Type)) + geom_point(aes(shape= Treatment))
+```
+
+### Comparacion de modelos
+
+
+```{r}
+Fit1 <- lm(formula = uptake ~ Type, data = CO2)
+```
+
+```{r}
+Fit2 <- lm(uptake ~ Treatment, data = CO2)
+Fit3 <- lm(uptake ~ conc, data = CO2)
+Fit4 <- lm(uptake ~ Type + Treatment + conc, data = CO2)
+Fit5 <- lm(uptake ~ Type + conc + I(log(conc)), data = CO2)
+Fit6 <- lm(uptake ~ Type:Treatment + conc + I(log(conc)), data = CO2)
+```
+
+
+### Seleccion de modelos con broom
+```{r}
+Modelo1 <- glance(Fit1) %>% dplyr::select(r.squared, AIC) %>% mutate(Modelo = "Fit1")
+Modelo2 <- glance(Fit2) %>% dplyr::select(r.squared, AIC) %>% mutate(Modelo = "Fit2")
+Modelo3 <- glance(Fit3) %>% dplyr::select(r.squared, AIC) %>% mutate(Modelo = "Fit3")
+Modelo4 <- glance(Fit4) %>% dplyr::select(r.squared, AIC) %>% mutate(Modelo = "Fit4")
+Modelo5 <- glance(Fit5) %>% dplyr::select(r.squared, AIC) %>% mutate(Modelo = "Fit5")
+Modelo6 <- glance(Fit6) %>% dplyr::select(r.squared, AIC) %>% mutate(Modelo = "Fit6")
+```
+
+### Ranking de modelos
+El mejor es el con menor AIC
+```{r}
+Modelos <- bind_rows(Modelo1, Modelo2, Modelo3, Modelo4, 
+                     Modelo5, Modelo6) %>% arrange(AIC) %>% mutate(DeltaAIC = AIC - 
+                                                            min(AIC))
+Modelos
+```
+
+
+Cómo saber que variable predictora usar? y como saber como interacción?
+
+```{r}
+ggplot(CO2, aes(x=conc, y=uptake, group=Plant)) +
+  geom_point(aes(color= Type, shape=Treatment)) + 
+  geom_line(aes(color=Type, lty=Treatment))+ theme_bw()###lty=tipo de linea
+```
+Al mirar el grafico, vemos que la especie hace una diferencia, y que el tratamiento tambien, pero dicho efecto depende de la especie.
+```{r}
+hist(augment(Fit1)$.resid)
+hist(augment(Fit6)$.resid) ## distribucion mas normal
+
+```
+
+
+
+
+
+
