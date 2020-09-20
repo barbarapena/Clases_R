@@ -10,6 +10,8 @@ knitr::opts_chunk$set(echo = TRUE, message = F)
 library(tidyverse)
 library(lubridate)
 ```
+https://www.youtube.com/watch?v=Vux78rHaRow
+
 
 # Como se organizan los datos en R ?
 
