@@ -1,7 +1,6 @@
-##Clase 1_11.agosto
+##Clase 1 Tidy Data
 
 data(uspop)
-
 uspop[c(5,4,7)]
 # Vectores y diferentes funciones
 x=  c(2,4,6,8)
@@ -35,7 +34,7 @@ data("iris")
 #-----------------------------------------------------
 #Group_by and summarize
 
-#Para summarize, pongo la funcion, el DF, y luego el nombre de la variable que quiero, y la función que aplico 
+#Para summarize, pongo la funcion, el DF, y luego el nombre de la variable que quiero, y la funci?n que aplico 
 Summary.Petal <- summarize( iris, Mean.Petal.Length=mean(Petal.Length),SD.Petal.Length=sd(Petal.Length))
 
 # Puedo ocupar summarize y group_by juntos, por ejemplo para hacer el mismo resumen, pero por especie.
@@ -44,7 +43,7 @@ por_especie<-group_by(iris, Species)
 DF2<- summarize( por_especie, Mean.Petal.Length=mean(Petal.Length),SD.Petal.Length=sd(Petal.Length))
 DF2
 
-# Puedo agrupar por más de una variable a la vez, se usa otra base de datos, pq iris solo tiene la especie como variable categorica
+# Puedo agrupar por m?s de una variable a la vez, se usa otra base de datos, pq iris solo tiene la especie como variable categorica
 
 #Cual es la media de las millas por galon, eficiencia, para autos de distintos cilindros y automatico manual
 data("mtcars")
@@ -68,9 +67,9 @@ abs(round(sqrt(log(4)),2))
 iris %>%  group_by(Species) %>%summarise(Mean_Sepal_L=mean(Sepal.Length))
 
 DF6<- iris %>%
-  mutate(Ratio_PEtal_epal=Petal.Length/Sepal.Length) %>% 
+  mutate(Ratio_PEtal_Sepal=Petal.Length/Sepal.Length) %>% 
   group_by(Species) %>% 
-  summarise(Mean_ratio=mean(Ratio_PEtal_epal),SD_ratio=sd(Ratio_PEtal_epal))
+  summarise(Mean_ratio=mean(Ratio_PEtal_Sepal),SD_ratio=sd(Ratio_PEtal_Sepal))
 DF6
 
 #---------------------------------------------------
@@ -87,7 +86,7 @@ DF8 <- iris %>%
 DF8
 
 #---------------------------------------------------
-#Filter, filtrar los datos, para seleccionar datos que cumplen una condición, y botar los otros
+#Filter, filtrar los datos, para seleccionar datos que cumplen una condici?n, y botar los otros
 
 DF9 <- iris %>% filter(Species != "versicolor") %>% 
   group_by(Species) %>% summarise_all(.funs=list(Mean=mean,SD=sd))
@@ -125,33 +124,23 @@ DF13
 
 
 ### Tarea 1 
-#Usando la base de datos del repositorio del ministerio de ciencias, 
-#genera un dataframe que responda lo siguiente:
-#1.-  ¿Que proporción de las comunas ha tenido en algun momento mas de 50 casos por cada 100.000 habitantes?
-#2.- Genera un dataframe, donde aparezca para cada comuna que haya tenido sobre 50 casos por cada 100.000 habitantes, 
-#cuantos días ha tenido sobre ese valor.
-#3 .- Genera una tabla de cuales comunas han tenido sobre 50 casos por cada 100.000 habitantes y de esas comunas 
-#crea una variable que sea la prevalencia máxima de dicha comuna.
 
 Casos_Activos <- read_csv("https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto19/CasosActivosPorComuna_std.csv")
-
 colnames(Casos_Activos)<- make.names(colnames(Casos_Activos))
 
-# Respuesta 1
+# 1
 Df1 <- mutate(Casos_Activos, casos.100milhabitantes= (Casos.activos/Poblacion)*100000) %>% filter(casos.100milhabitantes>=50) 
 n_comunas_totales<- unique(Casos_Activos$Comuna) %>% length()
 n_comunas_mayor_50 <- unique(Df1$Comuna) %>% length()
 Proporcion<-n_comunas_mayor_50/n_comunas_totales
 
-# Respuesta 2
+#2
 Df2<-  Df1 %>% group_by(Comuna) %>% summarise(N=n())
 
-#Respuesta 3
+#3
 Df3 <- Df1 %>%group_by(Comuna) %>% filter(casos.100milhabitantes==max(casos.100milhabitantes)) %>%
   rename(Prevalencia_maxima=casos.100milhabitantes) %>% select(Comuna,Prevalencia_maxima) %>% arrange(desc(Prevalencia_maxima))
 
-## 4.- Ve cuales son las 10 comunas que han tneido la mayor mediana de prevalencia, para cada una de ellas,
-# Genera una tabla con la mediana, prevalencia máxima y fecha que alcanzó la prevalencia máxima
+#4 
 Df4<- Df1 %>% arrange(desc(casos.100milhabitantes)) %>% rename(Prevalencia_max=casos.100milhabitantes)%>% slice_max(Prevalencia_max,n=10)
-
 Prevalencia_max_top_10<- Df4[1:10,]
