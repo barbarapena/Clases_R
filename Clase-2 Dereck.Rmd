@@ -1,0 +1,122 @@
+---
+title: "Clase 2_Dereck, Investigación reproducible"
+author: "Barbara Peña"
+date: "20-09-2020"
+output: html_document
+---
+
+
+install.packages("rmarkdown")
+install.packages("kableExtra")
+install.packages("knitr")
+install.packages("pacman")
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(kableExtra)
+library(knitr)
+library(pacman)
+```
+
+[link]https://www.youtube.com/watch?v=
+
+# Investigación reproducible 
+
+Un github es como un google drive o dropox para codigos. Tiene control de cambios, por lo que permite recuperar cualquier versión anterior. Funciona en base a codigos, pero hay interfaces GUIs. Cada proyecto es un repositorio (una carpeta en google drive aparte)
+- Git add: Agregar a los archivos que vas a guardar
+- Git commit: Guardar en el repositorio local (Mi computador)
+- Git push: Guardar en el repositorio remoto (En la nube)
+
+
+git config --global user.email "bpena1@uc.cl"
+git config --global user.name "barbarapena"
+
+# Datos para hoy
+Estos datos sobre platas extintas son datos de la **IUCN**, y se obtuvieron del siguiente repositorio (https://github.com/rfordatascience/tidytuesday) de github
+```{r}
+plants <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-08-18/plants.csv')
+actions <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-08-18/actions.csv')
+threats <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-08-18/threats.csv') 
+
+```
+
+## Texto
+
+# Titulo
+## subtitulo
+*cursiva*
+**negrita**
+[link] https://www.youtube.com/watch?v=CGvQPlpBcso
+
+## Chunks
+Es un espacio donde pongo el codigo a ejecutar en R (donde además se generan cuadros con ## que indican los mensajes que aparecen en la consola). Para agregar este espacio, clickeo en Insert (en la barra del 'scrip') y agrego R. Para agregalo en el html, clickeo en knit. 
+
+Si deseo que los mensajes ni los warnings aparezcan impresos, en {r}, agrego {r, warning=F, messages=F}.
+Puego setear esto como defult la primera vez que aparecen las opciones en el documento. 
+
+- echo= T o F, muestro o no el codigo
+- message= T o F, muestra mensaje de paquetes
+- warning = T o F muestra advertencias
+- eval= T o F evaluar o no el código
+- cache = T o F guarda o no el resultado
+- más opciones en [https://yihui.org/knitr/options/]
+
+## Inline codes
+- Código entrelazado en el texto
+- Para actualizar medias, máximos, mínimos
+- Valores de p, diferencias estadísticas
+- Pueden ser vectores, no tablas.
+
+Se pone una "r" y luego la línea del vector con entre los simbolos ``.
+Por ejemplo, el número de especias que hay en sudamérica es `r plants %>% filter(continent== "South America") %>% nrow()` especies 
+
+## Tablas
+kable parte de knitr, tabla igual a lo ingresado, pero KableExtra lo mejora
+
+
+
+```{r}
+data("msleep")
+Tabla <- msleep %>%  
+  group_by(vore) %>% 
+  summarise_at ("sleep_total", .funs = list(Mean=mean, SD=sd )) %>%  
+  filter(!is.na(vore)) %>% 
+  arrange(desc(Mean))
+
+```
+_______________________________________________________________________
+La tabla quedó sin limites, y muchos decimales (feas)
+
+```{r}
+kable(Tabla, digits = 2)
+```
+__________________________________________________________________________
+
+Agregando kable_styling
+
+```{r}
+kable(Tabla, digits = 2) %>% kable_styling()
+```
+__________________________________________________________________________
+Agregando mas opciones en kable_styling
+
+```{r}
+kable(Tabla, digits = 2) %>% kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+___________________________________________________________________________
+Agregando más opciones akable_styling
+```{r}
+kable(Tabla, digits = 2) %>% kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
+```
+___________________________________________________________________________
+Agregando más otras opciones akable_styling
+```{r}
+msleep_long<-msleep %>% select(name, vore,sleep_total, brainwt)
+
+kable(msleep_long, digits = 2, caption="La base de datos entera") %>% kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F) %>% scroll_box(width = "800px",height = "200px")
+```
+
+
+
+
